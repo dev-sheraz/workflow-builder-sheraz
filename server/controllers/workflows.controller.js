@@ -1,19 +1,36 @@
 /* eslint-disable no-undef */
+// Import required Node.js modules and utilities
 import fs from "fs";
 import path from "path";
 import { serverClient } from "../utils/pipedream.js";
 
-// Email to Slack workflow function
+/**
+ * Email to Slack workflow automation function
+ * Processes unread Gmail messages with attachments and forwards them to Slack
+ *
+ * This function:
+ * 1. Fetches unread emails with attachments from Gmail
+ * 2. Downloads and uploads attachments to Slack
+ * 3. Posts a formatted message to Slack with attachment details
+ * 4. Marks processed emails as read
+ *
+ * @param {Object} client - Pipedream client instance for API calls
+ * @param {string} externalUserId - External user identifier
+ * @param {Array} userAccounts - Array of user's connected app accounts
+ * @returns {Object} Results object with success status and processing details
+ */
 async function mailAttachmentToSlackChannel(
   client,
   externalUserId,
   userAccounts
 ) {
   try {
+    // Validate input parameters
     if (!userAccounts || !Array.isArray(userAccounts)) {
       throw new Error("userAccounts missing or invalid in request body");
     }
 
+    // Find user's connected Slack and Gmail accounts
     const userSlackAccount = userAccounts.find((u) =>
       u?.app?.name?.toLowerCase().includes("slack")
     );
@@ -21,6 +38,7 @@ async function mailAttachmentToSlackChannel(
       u?.app?.name?.toLowerCase().includes("gmail")
     );
 
+    // Ensure all required accounts and user ID are present
     if (!userSlackAccount || !userGmailAccount || !externalUserId) {
       throw new Error("Missing Slack, Gmail, or externalUserId");
     }
@@ -29,6 +47,7 @@ async function mailAttachmentToSlackChannel(
       `Found accounts - Gmail: ${userGmailAccount.id}, Slack: ${userSlackAccount.id}`
     );
 
+    // Fetch unread emails with attachments from Gmail API
     const response = await client.proxy.get({
       externalUserId,
       accountId: userGmailAccount.id,
@@ -37,18 +56,22 @@ async function mailAttachmentToSlackChannel(
       )}&labelIds=UNREAD&maxResults=100`,
     });
 
-    const rawEmails = [];
-    const emailDetails = [];
-    const uploadedFiles = [];
-    let slackMessage = "";
-    const attachments = [];
+    // Initialize data structures for processing
+    const rawEmails = [];           // Raw email data from Gmail API
+    const emailDetails = [];        // Processed email information
+    const uploadedFiles = [];       // Files successfully uploaded to Slack
+    let slackMessage = "";          // Formatted message for Slack
+    const attachments = [];         // Email attachments data
 
+    // Process emails if any are found
     if (response.messages?.length > 0) {
       console.log(
         `Found ${response.messages.length} unread messages with attachments`
       );
 
+      // Iterate through each unread message
       for (const message of response.messages) {
+        // Fetch detailed message information including attachments
         const emailDetail = await client.proxy.get({
           externalUserId,
           accountId: userGmailAccount.id,
@@ -56,14 +79,18 @@ async function mailAttachmentToSlackChannel(
         });
         rawEmails.push(emailDetail);
 
+        // Process email parts to find and download attachments
         if (emailDetail.payload.parts) {
           for (const part of emailDetail.payload.parts) {
+            // Check if part has an attachment
             if (part.filename && part.body?.attachmentId) {
+              // Download attachment data from Gmail
               const attachmentData = await client.proxy.get({
                 externalUserId,
                 accountId: userGmailAccount.id,
                 url: `/gmail/v1/users/me/messages/${message.id}/attachments/${part.body.attachmentId}`,
               });
+              // Store attachment metadata and data
               attachments.push({
                 filename: part.filename,
                 mimeType: part.mimeType,
@@ -74,7 +101,9 @@ async function mailAttachmentToSlackChannel(
           }
         }
 
+        // Extract email metadata if attachments were found
         if (attachments.length > 0) {
+          // Extract subject and sender from email headers
           const subject =
             emailDetail.payload.headers.find((h) => h.name === "Subject")
               ?.value || "No Subject";
@@ -82,6 +111,7 @@ async function mailAttachmentToSlackChannel(
             emailDetail.payload.headers.find((h) => h.name === "From")?.value ||
             "Unknown Sender";
 
+          // Store processed email information
           emailDetails.push({
             subject,
             from,
@@ -195,6 +225,7 @@ async function mailAttachmentToSlackChannel(
           }
         }
 
+        // Add uploaded file links to Slack message
         if (emailUploadedFiles.length > 0) {
           slackMessage += `\n*Uploaded Files:*\n`;
           for (const file of emailUploadedFiles) {
@@ -203,21 +234,22 @@ async function mailAttachmentToSlackChannel(
           }
         }
 
-        slackMessage += `\n---\n\n`;
+        slackMessage += `\n---\n\n`; // Separator between emails
       }
     } else {
+      // Default message when no attachments are found
       slackMessage = "No new emails with attachments found.";
     }
 
-    // Send message to Slack
+    // Send formatted message to Slack channel
     const messageResponse = await client.proxy.post({
       externalUserId,
       accountId: userSlackAccount.id,
       url: "/api/chat.postMessage",
       body: {
-        channel: "#testing_workflow",
+        channel: "#testing_workflow", // Target Slack channel
         text: slackMessage,
-        mrkdwn: true,
+        mrkdwn: true, // Enable markdown formatting
       },
     });
 
@@ -225,14 +257,14 @@ async function mailAttachmentToSlackChannel(
       console.error("Failed to send Slack message:", messageResponse.error);
     }
 
-    // Mark emails as read
+    // Mark processed emails as read to avoid reprocessing
     for (const email of emailDetails) {
       try {
         await client.proxy.post({
           externalUserId,
           accountId: userGmailAccount.id,
           url: `/gmail/v1/users/me/messages/${email.messageId}/modify`,
-          body: { removeLabelIds: ["UNREAD"] },
+          body: { removeLabelIds: ["UNREAD"] }, // Remove UNREAD label
         });
       } catch (markReadError) {
         console.error(
@@ -243,6 +275,8 @@ async function mailAttachmentToSlackChannel(
     }
 
     console.log("Email-to-Slack workflow completed successfully");
+
+    // Return workflow execution results
     return {
       success: true,
       emailsProcessed: emailDetails.length,
@@ -253,6 +287,7 @@ async function mailAttachmentToSlackChannel(
       messageSent: messageResponse.ok,
     };
   } catch (error) {
+    // Handle and log workflow errors
     console.error("Error in email-to-slack workflow:", error);
     return {
       success: false,
@@ -262,9 +297,22 @@ async function mailAttachmentToSlackChannel(
   }
 }
 
-// Controller handlers
+// =============================================================================
+// WORKFLOW CONTROLLER HANDLERS
+// =============================================================================
+/**
+ * GET /workflows - Fetch all available workflows from JSON file
+ *
+ * Returns a list of all workflow templates available in the system
+ * Workflows are stored in data/workflows.json file
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with workflows array or error message
+ */
 export const getWorkflows = (req, res) => {
   try {
+    // Read workflows from local JSON file
     const workflowsPath = path.join(process.cwd(), "data", "workflows.json");
     const workflowsData = JSON.parse(fs.readFileSync(workflowsPath, "utf8"));
     res.json({ workflows: workflowsData });
@@ -277,12 +325,22 @@ export const getWorkflows = (req, res) => {
   }
 };
 
+/**
+ * GET /workflows/:id - Fetch a specific workflow by its template ID
+ *
+ * Retrieves detailed information about a single workflow template
+ *
+ * @param {Object} req - Express request object with id parameter
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with workflow data or error message
+ */
 export const getWorkflowById = (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params; // Extract workflow ID from URL parameters
     const workflowsPath = path.join(process.cwd(), "data", "workflows.json");
     const workflowsData = JSON.parse(fs.readFileSync(workflowsPath, "utf8"));
 
+    // Find workflow by template_id
     const workflow = workflowsData.find((wf) => wf.template_id === id);
 
     if (!workflow) {
@@ -302,16 +360,28 @@ export const getWorkflowById = (req, res) => {
   }
 };
 
-export const runWorkflow = async (req, res) => {
+/**
+ * POST /workflows/:id/run - Execute a specific workflow
+ *
+ * Runs a workflow for a specific user with their connected accounts
+ * Supports custom workflow implementations and generic Pipedream workflow invocation
+ *
+ * @param {Object} req - Express request object with userId, userAccounts in body and id in params
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with execution results or error message
+ */
+export const runWorkflow = async(req, res) => {
   const { userId, userAccounts } = req.body;
   const { id: workflowId } = req.params;
   try {
+    // Validate required parameters
     if (!userId) {
       return res.status(400).json({ error: "userId is required" });
     }
     if (!workflowId) {
       return res.status(400).json({ error: "workflow id is required" });
     }
+    // Load workflow configuration from JSON file
     const workflowsPath = path.join(process.cwd(), "data", "workflows.json");
     const workflowsData = JSON.parse(fs.readFileSync(workflowsPath, "utf8"));
     const workflow = workflowsData.find((wf) => wf.template_id === workflowId);
@@ -322,7 +392,10 @@ export const runWorkflow = async (req, res) => {
       });
     }
     console.log(`Running workflow with id ${workflowId} for user: ${userId}`);
+
+    // Handle custom workflow implementations
     if (workflowId === "email-to-slack") {
+      // Execute custom email-to-slack workflow
       const result = await mailAttachmentToSlackChannel(
         serverClient,
         userId,
@@ -346,17 +419,18 @@ export const runWorkflow = async (req, res) => {
         });
       }
     }
+//     const {accessToken} = await serverClient.oauthTokens.create({
+//   clientId: process.env.PIPEDREAM_CLIENT_ID,
+//   clientSecret: process.env.PIPEDREAM_CLIENT_SECRET
+// });
+    // Execute generic Pipedream workflow
     const response = await serverClient.workflows.invokeForExternalUser({
-      urlOrEndpoint: workflow.run_url,
       externalUserId: userId,
-      body: {
-        foo: 123,
-        bar: "abc",
-        baz: null,
-      },
-    });
+      urlOrEndpoint: workflow.run_url,
+    })
     return res.json({ response });
   } catch (error) {
+    // Handle workflow execution errors with detailed error messages
     console.error("Error running workflow:", error);
     const message =
       error.body?.message ||

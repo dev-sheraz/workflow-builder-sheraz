@@ -1,15 +1,35 @@
+// Dashboard page - displays all available workflows in a grid layout
 import { useNavigate } from "react-router-dom";
 import { UserAccounts } from "../components/UserAccounts";
 import { useWorkflows } from "../hooks/useWorkflows";
 
+/**
+ * Dashboard component - Main landing page of the application
+ *
+ * Features:
+ * 1. Displays all available workflows in a responsive grid
+ * 2. Shows loading states and error handling
+ * 3. Includes user account management component
+ * 4. Navigates to workflow details when a workflow is clicked
+ *
+ * @returns {JSX.Element} Dashboard page component
+ */
 export default function Dashboard() {
   const navigate = useNavigate();
   const { data: workflows, isLoading, error, isError } = useWorkflows();
-  function handleClick(template_id: string) {
-    navigate(`/workflowDetails/${template_id}`);
+
+  /**
+   * Handle workflow card click - navigates to workflow details page
+   * @param {string} workflow_id - ID of the workflow template to view
+   */
+  function handleClick(workflow_id: string) {
+    console.log(workflow_id)
+    navigate(`/workflowDetails/${workflow_id}`);
   }
+  // Static user ID for demo purposes
   const userId = "user-123";
 
+  // Loading state - show spinner while fetching workflows
   if (isLoading) {
     return (
       <div className="p-6">
@@ -21,6 +41,7 @@ export default function Dashboard() {
     );
   }
 
+  // Error state - show error message with retry option
   if (isError) {
     return (
       <div className="p-6">
@@ -42,6 +63,7 @@ export default function Dashboard() {
     );
   }
 
+  // Empty state - show message when no workflows are available
   if (!workflows || workflows.length === 0) {
     return (
       <div className="p-6">
@@ -54,10 +76,12 @@ export default function Dashboard() {
     );
   }
 
+  // Success state - display workflows in a responsive grid
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Available Workflows</h1>
 
+      {/* Responsive grid layout for workflow cards */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {workflows.map((wf) => (
           <div
@@ -65,9 +89,11 @@ export default function Dashboard() {
             onClick={() => handleClick(wf.template_id)}
             className="bg-white rounded-xl shadow p-4 hover:shadow-md transition cursor-pointer"
           >
+            {/* Workflow name from settings */}
             <h2 className="text-lg font-semibold">
               {wf.payload.settings.name}
             </h2>
+            {/* Organization and project metadata */}
             <p className="text-sm text-gray-500">Org: {wf.payload.org_id}</p>
             <p className="text-sm text-gray-500">
               Project: {wf.payload.project_id}
@@ -75,6 +101,8 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
+
+      {/* User account management component */}
       <UserAccounts userId={userId} />
     </div>
   );

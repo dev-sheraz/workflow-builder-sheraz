@@ -1,3 +1,4 @@
+// Workflow service - handles all workflow-related API operations
 import type {
   RunWorkflowRequestParams,
   RunWorkflowResponse,
@@ -7,8 +8,16 @@ import type {
 } from "../types/workflow";
 import { api } from "./api";
 
+/**
+ * Workflow service object containing all workflow-related API methods
+ * Provides type-safe interfaces for workflow operations with proper error handling
+ */
 export const workflowService = {
-  // Get all workflows
+  /**
+   * Fetch all available workflows from the backend
+   * @returns {Promise<WorkflowTemplate[]>} Array of workflow templates
+   * @throws {Error} When the API request fails
+   */
   async getWorkflows(): Promise<WorkflowTemplate[]> {
     try {
       const response = await api.get<WorkflowsResponse>("/api/workflows");
@@ -20,8 +29,14 @@ export const workflowService = {
     }
   },
 
-  // Get workflow by ID
+  /**
+   * Fetch a specific workflow by its template ID
+   * @param {string} id - The workflow template ID
+   * @returns {Promise<WorkflowTemplate>} The workflow template
+   * @throws {Error} When workflow is not found or API request fails
+   */
   async getWorkflowById(id: string): Promise<WorkflowTemplate> {
+    console.log(id, "form service")
     try {
       const response = await api.get<WorkflowResponse>(`/api/workflows/${id}`);
       return response.data.workflow;
@@ -35,7 +50,12 @@ export const workflowService = {
     }
   },
 
-  // Run workflow by ID
+  /**
+   * Execute a workflow with the provided parameters
+   * @param {RunWorkflowRequestParams} params - Workflow execution parameters
+   * @returns {Promise<RunWorkflowResponse>} Workflow execution results
+   * @throws {Error} When workflow execution fails or workflow not found
+   */
   async runWorkflowById(
     params: RunWorkflowRequestParams
   ): Promise<RunWorkflowResponse> {
@@ -43,8 +63,8 @@ export const workflowService = {
       const response = await api.post<RunWorkflowResponse>(
         `/api/workflows/run/${params.id}`,
         {
-          userAccounts: params.userAccounts,
-          userId: params.userId,
+          userAccounts: params.userAccounts, // User's connected app accounts
+          userId: params.userId,             // External user identifier
         }
       );
       return response.data;
