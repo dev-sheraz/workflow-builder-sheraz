@@ -1,0 +1,153 @@
+[
+  {
+    "template_id": "email-to-slack",
+    "run_url": "http://127.0.0.1:4000/run-workflow/email-to-slack",
+    "payload": {
+      "org_id": "o_8LIN1Pz",
+      "project_id": "proj_email_slack",
+      "steps": [
+        {
+          "namespace": "search_unread_emails_with_attachments",
+          "props": {
+            "gmail": { "externalUserConfig": "default" },
+            "q": "has:attachment label:unread",
+            "maxResults": 100,
+            "includeSpamTrash": false
+          }
+        },
+        {
+          "namespace": "extract_attachments_from_emails",
+          "props": {
+            "gmail": { "externalUserConfig": "default" },
+            "emails": "{{ steps.search_unread_emails_with_attachments.$return_value.messages }}"
+          }
+        },
+        {
+          "namespace": "upload_files_to_slack",
+          "props": {
+            "slack": { "externalUserConfig": "default" },
+            "channel": "#testing_workflow",
+            "attachments": "{{ steps.extract_attachments_from_emails.$return_value.attachments }}"
+          }
+        },
+        {
+          "namespace": "send_summary_message_to_slack",
+          "props": {
+            "slack": { "externalUserConfig": "default" },
+            "channel": "#testing_workflow",
+            "message": "{{ steps.upload_files_to_slack.$return_value.summaryMessage }}"
+          }
+        },
+        {
+          "namespace": "mark_emails_as_read",
+          "props": {
+            "gmail": { "externalUserConfig": "default" },
+            "emails": "{{ steps.search_unread_emails_with_attachments.$return_value.messages }}"
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "props": {
+            "emitShape": "ERGONOMIC",
+            "responseType": "customResponse",
+            "domains": [],
+            "authorization": "none",
+            "discardAutomatedRequests": false,
+            "staticResponseStatus": 200,
+            "staticResponseHeaders": {},
+            "staticResponseBody": "",
+            "bearerToken": ""
+          }
+        }
+      ],
+      "settings": {
+        "name": "Gmail Attachments to Slack Workflow",
+        "auto_deploy": true
+      }
+    }
+  },
+  {
+    "template_id": "tch_dbfd98",
+    "run_url": "https://eok8drpjz5pzhk5.m.pipedream.net",
+    "payload": {
+      "org_id": "o_8LIN1Pz",
+      "project_id": "proj_GzsAA0y",
+      "steps": [
+        {
+          "namespace": "find_email",
+          "props": {
+            "gmail": {
+              "externalUserConfig": "default"
+            },
+            "q": null,
+            "withTextPayload": false,
+            "labels": "UNREAD",
+            "includeSpamTrash": null,
+            "maxResults": 100
+          }
+        },
+        {
+          "namespace": "download_attachment",
+          "props": {
+            "gmail": {
+              "externalUserConfig": "default"
+            },
+            "messageId": "{{steps.code.$return_value[0].message_id}}",
+            "attachmentId": "{{steps.code.$return_value[0].payload.parts[1].body.attachmentId}}",
+            "filename": "{{steps.code.$return_value[0].payload.parts[1].filename}}"
+          }
+        },
+        {
+          "namespace": "get_dowload_url_of_attachment",
+          "props": {
+            "google_drive": {
+              "authProvisionId": "apn_V1h0zQD"
+            },
+            "filePath": "{{steps.download_attachment.$return_value.filePath}}"
+          }
+        },
+        {
+          "namespace": "send_message_to_channel",
+          "props": {
+            "slack": {
+              "externalUserConfig": "default"
+            },
+            "conversation": "testing_workflow",
+            "text": "*New Email Received*\n\n*Subject:* {{steps.code.$return_value[0].subject}}\n\n*Body:*\n```{{steps.code.$return_value[0].payload.parts[0].parts[0].body.text}}```\n\n*📎 Download File:*\n<{{steps.get_dowload_url_of_attachment.$return_value.publicDownloadUrl}}|Click here to download>",
+            "mrkdwn": true,
+            "as_user": true,
+            "post_at": null,
+            "include_sent_via_pipedream_flag": true,
+            "customizeBotSettings": null,
+            "replyToThread": null,
+            "addMessageMetadata": null,
+            "configureUnfurlSettings": null,
+            "thread_broadcast": false,
+            "unfurl_links": false,
+            "unfurl_media": false
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "props": {
+            "emitShape": "ERGONOMIC",
+            "responseType": "default",
+            "domains": [],
+            "authorization": "none",
+            "discardAutomatedRequests": null,
+            "staticResponseStatus": 200,
+            "staticResponseHeaders": {},
+            "staticResponseBody": "",
+            "bearerToken": ""
+          }
+        }
+      ],
+      "settings": {
+        "name": "gmail_gdrive_slack",
+        "auto_deploy": true
+      }
+    }
+  }
+]
