@@ -91,7 +91,7 @@ function WorkflowDetails() {
         userId={userId}
       />
 
-      {/* Workflow execution section - handles running the workflow */}
+      {/* Workflow deployment section - handles deploying the workflow with cron scheduling */}
       <WorkflowRunner
         userAccounts={accounts}
         requiredApps={requiredApps}

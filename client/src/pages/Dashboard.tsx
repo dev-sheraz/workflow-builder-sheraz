@@ -1,6 +1,7 @@
 // Dashboard page - displays all available workflows in a grid layout
 import { useNavigate } from "react-router-dom";
 import { UserAccounts } from "../components/UserAccounts";
+import { DeployedWorkflows } from "../components/DeployedWorkflows";
 import { useWorkflows } from "../hooks/useWorkflows";
 
 /**
@@ -15,6 +16,8 @@ import { useWorkflows } from "../hooks/useWorkflows";
  * @returns {JSX.Element} Dashboard page component
  */
 export default function Dashboard() {
+  // Static user ID for demo purposes
+  const userId = "user-123";
   const navigate = useNavigate();
   const { data: workflows, isLoading, error, isError } = useWorkflows();
 
@@ -23,12 +26,8 @@ export default function Dashboard() {
    * @param {string} workflow_id - ID of the workflow template to view
    */
   function handleClick(workflow_id: string) {
-    console.log(workflow_id)
     navigate(`/workflowDetails/${workflow_id}`);
   }
-  // Static user ID for demo purposes
-  const userId = "user-123";
-
   // Loading state - show spinner while fetching workflows
   if (isLoading) {
     return (
@@ -104,6 +103,9 @@ export default function Dashboard() {
 
       {/* User account management component */}
       <UserAccounts userId={userId} />
+
+      {/* Deployed workflows management component */}
+      <DeployedWorkflows userId={userId} />
     </div>
   );
 }

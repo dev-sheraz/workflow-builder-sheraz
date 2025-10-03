@@ -28,3 +28,8 @@ export async function generateAccessToken() {
   });
   return accessToken;
 }
+
+export async function retrieveTrigger(componentId) {
+  const response = await serverClient.triggers.retrieve(componentId)
+  return response;
+}

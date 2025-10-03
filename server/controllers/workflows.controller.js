@@ -19,7 +19,7 @@ import { serverClient } from "../utils/pipedream.js";
  * @param {Array} userAccounts - Array of user's connected app accounts
  * @returns {Object} Results object with success status and processing details
  */
-async function mailAttachmentToSlackChannel(
+export async function mailAttachmentToSlackChannel(
   client,
   externalUserId,
   userAccounts

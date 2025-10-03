@@ -190,3 +190,23 @@ export interface ApiResponse<T> {
   error?: string;  // Error message (when failed)
   message?: string; // Additional status message
 }
+
+export interface TriggerConfig {
+  active: boolean;
+  componentId: string;
+  configurableProps: Array<Record<string, any>>; // if you know the exact shape, we can type it better
+  configuredProps: {
+    gmail?: Record<string, any>;
+    db?: Record<string, any>;
+    timer?: Record<string, any>;
+    labels?: Record<string, any>;
+    withTextPayload: boolean;
+  };
+  createdAt: number; // Unix timestamp
+  id: string;
+  name: string;
+  nameSlug: string;
+  ownerId: string;
+  updatedAt: number; // Unix timestamp
+}
+

@@ -1,0 +1,148 @@
+[
+  {
+    "id": "21e5500f-dc53-483b-a6ef-4967e1c5c51a",
+    "userId": "user-123",
+    "workflowId": "email-to-slack",
+    "workflowName": "Gmail Attachments to Slack Workflow",
+    "pollingInterval": 2,
+    "userAccounts": [
+      {
+        "id": "apn_arhjZVw",
+        "name": "sheraz@parkmyphone.com",
+        "external_id": "user-123",
+        "healthy": true,
+        "dead": null,
+        "app": {
+          "id": "oa_88i1vK",
+          "name_slug": "slack",
+          "name": "Slack",
+          "auth_type": "oauth",
+          "description": "Slack is a channel-based messaging platform. With Slack, people can work together more effectively, connect all their software tools and services, and find the information they need to do their best work — all within a secure, enterprise-grade environment.",
+          "img_src": "https://assets.pipedream.net/s.v0/app_OkrhR1/logo/orig",
+          "custom_fields_json": "[]",
+          "categories": [
+            "Communication"
+          ],
+          "featured_weight": 1000000001,
+          "connect": {
+            "allowed_domains": [
+              "slack.com"
+            ],
+            "base_proxy_target_url": "https://slack.com",
+            "proxy_enabled": true
+          }
+        },
+        "created_at": "2025-10-03T11:44:41.000Z",
+        "updated_at": "2025-10-03T12:55:49.000Z"
+      },
+      {
+        "id": "apn_OghbKXV",
+        "name": "sheraz@parkmyphone.com",
+        "external_id": "user-123",
+        "healthy": true,
+        "dead": null,
+        "app": {
+          "id": "oa_2oiO2z",
+          "name_slug": "gmail",
+          "name": "Gmail",
+          "auth_type": "oauth",
+          "description": "Gmail offers private and secure email by Google at no cost, for business and consumer accounts.",
+          "img_src": "https://assets.pipedream.net/s.v0/app_OQYhq7/logo/orig",
+          "custom_fields_json": "[]",
+          "categories": [
+            "Communication"
+          ],
+          "featured_weight": 31001,
+          "connect": {
+            "allowed_domains": [
+              "www.googleapis.com",
+              "gmail.googleapis.com"
+            ],
+            "base_proxy_target_url": "https://www.googleapis.com",
+            "proxy_enabled": true
+          }
+        },
+        "created_at": "2025-10-03T11:27:24.000Z",
+        "updated_at": "2025-10-03T13:08:00.000Z"
+      }
+    ],
+    "status": "inactive",
+    "createdAt": "2025-10-03T13:09:25.500Z",
+    "lastRun": "2025-10-03T13:24:00.598Z",
+    "runCount": 3,
+    "updatedAt": "2025-10-03T13:24:32.291Z",
+    "stoppedAt": "2025-10-03T13:24:32.293Z"
+  },
+  {
+    "id": "2836e9fa-4690-4ea2-9d8b-c641489a34d5",
+    "userId": "user-123",
+    "workflowId": "tch_EvfD61",
+    "workflowName": "gmail_gdrive_slack",
+    "pollingInterval": 2,
+    "userAccounts": [
+      {
+        "id": "apn_arhjZVw",
+        "name": "sheraz@parkmyphone.com",
+        "external_id": "user-123",
+        "healthy": true,
+        "dead": null,
+        "app": {
+          "id": "oa_88i1vK",
+          "name_slug": "slack",
+          "name": "Slack",
+          "auth_type": "oauth",
+          "description": "Slack is a channel-based messaging platform. With Slack, people can work together more effectively, connect all their software tools and services, and find the information they need to do their best work — all within a secure, enterprise-grade environment.",
+          "img_src": "https://assets.pipedream.net/s.v0/app_OkrhR1/logo/orig",
+          "custom_fields_json": "[]",
+          "categories": [
+            "Communication"
+          ],
+          "featured_weight": 1000000001,
+          "connect": {
+            "allowed_domains": [
+              "slack.com"
+            ],
+            "base_proxy_target_url": "https://slack.com",
+            "proxy_enabled": true
+          }
+        },
+        "created_at": "2025-10-03T11:44:41.000Z",
+        "updated_at": "2025-10-03T12:55:49.000Z"
+      },
+      {
+        "id": "apn_OghbKXV",
+        "name": "sheraz@parkmyphone.com",
+        "external_id": "user-123",
+        "healthy": true,
+        "dead": null,
+        "app": {
+          "id": "oa_2oiO2z",
+          "name_slug": "gmail",
+          "name": "Gmail",
+          "auth_type": "oauth",
+          "description": "Gmail offers private and secure email by Google at no cost, for business and consumer accounts.",
+          "img_src": "https://assets.pipedream.net/s.v0/app_OQYhq7/logo/orig",
+          "custom_fields_json": "[]",
+          "categories": [
+            "Communication"
+          ],
+          "featured_weight": 31001,
+          "connect": {
+            "allowed_domains": [
+              "www.googleapis.com",
+              "gmail.googleapis.com"
+            ],
+            "base_proxy_target_url": "https://www.googleapis.com",
+            "proxy_enabled": true
+          }
+        },
+        "created_at": "2025-10-03T11:27:24.000Z",
+        "updated_at": "2025-10-03T13:08:00.000Z"
+      }
+    ],
+    "status": "active",
+    "createdAt": "2025-10-03T13:24:40.612Z",
+    "lastRun": "2025-10-03T13:46:00.581Z",
+    "runCount": 10
+  }
+]

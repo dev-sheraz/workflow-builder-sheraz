@@ -14,20 +14,20 @@ const router = express.Router();
  * Execute a specific workflow by its ID
  * Requires userId and userAccounts in request body
  */
-router.post("/api/workflows/run/:id", runWorkflow);
+router.post("/workflows/run/:id", runWorkflow);
 
 /**
  * GET /api/workflows
  * Retrieve all available workflow templates
  * Returns list of workflows from JSON configuration
  */
-router.get("/api/workflows", getWorkflows);
+router.get("/workflows", getWorkflows);
 
 /**
  * GET /api/workflows/:id
  * Retrieve a specific workflow template by ID
  * Returns detailed workflow configuration
  */
-router.get("/api/workflows/:id", getWorkflowById);
+router.get("/workflows/:id", getWorkflowById);
 
 export default router;

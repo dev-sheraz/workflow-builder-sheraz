@@ -77,4 +77,85 @@ export const workflowService = {
       );
     }
   },
+
+
+  /**
+   * Deploy a workflow with polling interval
+   * @param {any} params - Deployment parameters (userId, workflowId, pollingInterval, userAccounts)
+   * @returns {Promise<any>} Deployment response
+   * @throws {Error} When deployment fails
+   */
+  async deployWorkflow(params: any): Promise<any> {
+    try {
+      const response = await api.post(
+        `/api/deployments/deploy`,
+        {
+          userId: params.userId,
+          workflowId: params.id,
+          pollingInterval: params.pollingInterval,
+          userAccounts: params.userAccounts,
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to deploy workflow"
+      );
+    }
+  },
+
+  /**
+   * List all deployments for a user
+   * @param {string} userId - User ID
+   * @returns {Promise<any>} List of deployments
+   * @throws {Error} When request fails
+   */
+  async listDeployments(userId: string): Promise<any> {
+    try {
+      const response = await api.get(`/api/deployments/list/${userId}`);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to list deployments"
+      );
+    }
+  },
+
+  /**
+   * Update a deployment
+   * @param {string} deploymentId - Deployment ID
+   * @param {any} updateData - Update data (pollingInterval, status)
+   * @returns {Promise<any>} Update response
+   * @throws {Error} When update fails
+   */
+  async updateDeployment(deploymentId: string, updateData: any): Promise<any> {
+    try {
+      const response = await api.put(
+        `/api/deployments/update/${deploymentId}`,
+        updateData
+      );
+      return response.data;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to update deployment"
+      );
+    }
+  },
+
+  /**
+   * Delete a deployment
+   * @param {string} deploymentId - Deployment ID
+   * @returns {Promise<any>} Delete response
+   * @throws {Error} When deletion fails
+   */
+  async deleteDeployment(deploymentId: string): Promise<any> {
+    try {
+      const response = await api.delete(`/api/deployments/delete/${deploymentId}`);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to delete deployment"
+      );
+    }
+  },
 };

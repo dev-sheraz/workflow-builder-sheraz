@@ -1,0 +1,16 @@
+{
+  "watch": [
+    "controllers/**/*.js",
+    "routes/**/*.js",
+    "utils/**/*.js",
+    "index.js"
+  ],
+  "ignore": [
+    "node_modules/**",
+    "data/**",
+    "*.log"
+  ],
+  "ext": "js",
+  "delay": "1000",
+  "verbose": false
+}

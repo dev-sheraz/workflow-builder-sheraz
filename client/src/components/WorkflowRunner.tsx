@@ -1,7 +1,7 @@
-// Workflow runner component - handles workflow execution with validation and status
+// Workflow deployment component - handles workflow deployment with validation and status
 import { useState, useCallback } from "react";
 import type { Account } from "@pipedream/sdk";
-import { useRunWorkflow } from "../hooks/useWorkflows";
+import { useDeployWorkflow } from "../hooks/useWorkflows";
 
 /**
  * Props interface for WorkflowRunner component
@@ -14,13 +14,13 @@ interface WorkflowRunnerProps {
 }
 
 /**
- * WorkflowRunner component - Manages workflow execution and displays results
+ * WorkflowRunner component - Manages workflow deployment and displays results
  *
  * Features:
- * 1. Validates required app connections before execution
- * 2. Provides run button with loading states
- * 3. Shows execution results and error messages
- * 4. Tracks last run time for user reference
+ * 1. Validates required app connections before deployment
+ * 2. Provides deploy button with loading states
+ * 3. Shows deployment results and error messages
+ * 4. Allows configuring polling interval for the workflow
  * 5. Displays missing account warnings
  *
  * @param {WorkflowRunnerProps} props - Component props
@@ -32,8 +32,8 @@ export function WorkflowRunner({
   requiredApps,
   workflowId,
 }: WorkflowRunnerProps) {
-  // Track the last time workflow was executed
-  const [lastRunTime, setLastRunTime] = useState<Date | null>(null);
+  // Track polling interval in minutes
+  const [pollingInterval, setPollingInterval] = useState<number>(5);
 
   /**
    * Check if all required apps are connected
@@ -48,56 +48,49 @@ export function WorkflowRunner({
     );
   }, [userAccounts, requiredApps]);
 
-  // React Query mutation for workflow execution
+  // React Query mutation for workflow deployment
   const {
-    mutateAsync: runWorkflow, // Function to trigger workflow execution
-    data,                     // Execution response data
-    error,                    // Execution error information
-    isPending: running,       // Whether workflow is currently executing
-  } = useRunWorkflow({
+    mutateAsync: deployWorkflow, // Function to trigger workflow deployment
+    data,                         // Deployment response data
+    error,                        // Deployment error information
+    isPending: deploying,         // Whether workflow is currently deploying
+  } = useDeployWorkflow({
     userId,
     id: workflowId,
     userAccounts,
+    pollingInterval,
   });
 
   /**
-   * Handle workflow execution
-   * Updates last run time on successful execution
+   * Handle workflow deployment
+   * Deploys workflow with specified polling interval
    */
-  const handleRun = async () => {
+  const handleDeploy = async () => {
     try {
-      const response = await runWorkflow();
-      if (response) {
-        setLastRunTime(new Date());
-      }
+      await deployWorkflow();
     } catch {
-      // Error handling is done via the error state from useRunWorkflow
+      // Error handling is done via the error state from useDeployWorkflow
     }
   };
 
-  // Determine if workflow can be executed (all apps connected and not currently running)
-  const canRunWorkflow = hasRequiredAccounts() && !running;
+  // Determine if workflow can be deployed (all apps connected and not currently deploying)
+  const canDeployWorkflow = hasRequiredAccounts() && !deploying;
 
-  // Generate appropriate result message based on execution state
+  // Generate appropriate result message based on deployment state
   const resultMessage = error
-    ? "Workflow failed. Please try again."
+    ? "Deployment failed. Please try again."
     : data?.message ||
       (data?.success
-        ? "Workflow completed successfully!"
+        ? "Workflow deployed successfully!"
         : data
-        ? "Workflow completed but no action taken."
+        ? "Deployment completed but no action taken."
         : "");
 
   return (
     <div className="mt-4 bg-white rounded-lg shadow-md p-6">
-      {/* Header with title and last run time */}
+      {/* Header with title */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-gray-900">Workflow Runner</h2>
-        {lastRunTime && (
-          <span className="text-sm text-gray-500">
-            Last run: {lastRunTime.toLocaleTimeString()}
-          </span>
-        )}
+        <h2 className="text-xl font-semibold text-gray-900">Deploy Workflow</h2>
       </div>
 
       {/* Warning message for missing required accounts */}
@@ -107,7 +100,7 @@ export function WorkflowRunner({
             Missing Required Accounts
           </p>
           <p className="text-yellow-700 text-sm mt-1">
-            Please connect the following accounts to run this workflow:
+            Please connect the following accounts to deploy this workflow:
           </p>
           <ul className="list-disc list-inside text-yellow-700 text-sm mt-1">
             {requiredApps.map((app) => (
@@ -117,34 +110,53 @@ export function WorkflowRunner({
         </div>
       )}
 
-      {/* Run workflow button - disabled if requirements not met */}
+      {/* Polling interval configuration */}
+      <div className="mb-4">
+        <label htmlFor="pollingInterval" className="block text-sm font-medium text-gray-700 mb-2">
+          Polling Interval (minutes)
+        </label>
+        <input
+          type="number"
+          id="pollingInterval"
+          min="1"
+          value={pollingInterval}
+          onChange={(e) => setPollingInterval(Number(e.target.value))}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          disabled={deploying}
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          The workflow will run automatically every {pollingInterval} minute{pollingInterval !== 1 ? 's' : ''}
+        </p>
+      </div>
+
+      {/* Deploy workflow button - disabled if requirements not met */}
       <button
-        onClick={handleRun}
-        disabled={!canRunWorkflow}
+        onClick={handleDeploy}
+        disabled={!canDeployWorkflow}
         className={`w-full px-6 py-3 font-medium rounded-md transition-colors ${
-          canRunWorkflow
-            ? "bg-green-600 hover:bg-green-700 text-white"  // Enabled state - green
+          canDeployWorkflow
+            ? "bg-blue-600 hover:bg-blue-700 text-white"  // Enabled state - blue
             : "bg-gray-300 text-gray-500 cursor-not-allowed" // Disabled state - gray
         }`}
       >
-        {running ? "Running Workflow..." : "Run Workflow"}
+        {deploying ? "Deploying Workflow..." : "Deploy Workflow"}
       </button>
 
-      {/* Execution result display - shows success/error messages */}
+      {/* Deployment result display - shows success/error messages */}
       {resultMessage && (
         <div className="mt-4">
           <div
             className={`p-4 rounded-md ${
               resultMessage.toLowerCase().includes("fail")
                 ? "bg-red-50 border border-red-200"    // Error styling - red
-                : "bg-blue-50 border border-blue-200"   // Success styling - blue
+                : "bg-green-50 border border-green-200"   // Success styling - green
             }`}
           >
             <p
               className={`text-sm ${
                 resultMessage.toLowerCase().includes("fail")
                   ? "text-red-800"   // Error text - red
-                  : "text-blue-800"  // Success text - blue
+                  : "text-green-800"  // Success text - green
               }`}
             >
               {resultMessage}
